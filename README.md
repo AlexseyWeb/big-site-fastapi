@@ -1,1 +1,1 @@
-# big-site-fastapi
+# Simple app with FastAPI
