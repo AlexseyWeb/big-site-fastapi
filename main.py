@@ -22,6 +22,11 @@ def find_post(id):
 async def root():
     return {"message": "Welcome to my api!!"}
 
+@app.get("/about_me")
+async def about_me():
+    return {"API":"Developer AlexseyWeb!"}
+
+#CRUD 
 
 @app.get("/posts")
 async def get_posts():
