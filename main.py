@@ -12,6 +12,8 @@ class Post(BaseModel):
     rating: Optional[int] = None 
 
 my_posts = [{"title": "Zero post", "content": "This is Zero Post", "id" : 0},{"title": "First post ", "content": "This is a first post on site", "id": 1}, {"title": "Second post", "content": "A second post on site", "id": 2}]
+about_me_list = {"author": "AlexseyWeb", "year": 1991, "work": "SystemAdministrator"}
+
 
 def find_post(id):
     for post in my_posts:
@@ -24,7 +26,8 @@ async def root():
 
 @app.get("/about_me")
 async def about_me():
-    return {"API":"Developer AlexseyWeb!"}
+  
+    return {"data": about_me_list['author']}
 
 #CRUD 
 
