@@ -52,12 +52,12 @@ async def create_posts(new_post:Post):
     return {"data": new_post}
 
 @app.put("/post/{id}")
-async def update_post(id:int,  response: Response):
+async def update_post(id:int, title, content, response: Response):
     post = find_post(id)
     if not post:
         raise HTTPException(status_code=status.HTTP_304_NOT_MODIFIED, detail=f"Post with{id} is not update")
-    new_post = my_posts[id]['title'] = "Change post"
-    new_post = my_posts[id]["content"] = "Python is Fun!"
+    new_post = my_posts[id]['title'] = title
+    new_post = my_posts[id]["content"] = content
     return {"updated_post": new_post}
 
 
