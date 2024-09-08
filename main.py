@@ -56,13 +56,14 @@ async def create_posts(new_post:Post):
     return {"data": new_post}
 
 @app.put("/post/{id}")
-async def update_post(id:int, title, content, response: Response):
-    post = find_post(id)
-    if not post:
+async def update_post(id:int, post:Post):
+    index = find_index_post(id)
+    if index == None:
         raise HTTPException(status_code=status.HTTP_304_NOT_MODIFIED, detail=f"Post with{id} is not update")
-    new_post = my_posts[id]['title'] = title
-    new_post = my_posts[id]["content"] = content
-    return {"updated_post": new_post}
+    post_dict = post.dict()
+    post_dict["id"] = id 
+    my_posts[index] = post_dict
+    return {"updated_post": post_dict}
 
 
 @app.get("/post/{id}")
