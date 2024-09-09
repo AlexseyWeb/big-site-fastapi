@@ -5,6 +5,7 @@ from random import randrange
 
 app = FastAPI()
 
+#Models for API
 class Post(BaseModel):
     title: str
     content: str
