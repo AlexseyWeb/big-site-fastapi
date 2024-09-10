@@ -22,6 +22,7 @@ class InfoAboutAPI(BaseModel):
 
 while True:
     try:
+        #bad hardcode
         conn = psycopg2.connect(host="localhost", database="fastapi", user="postgres", password="password123", cursor_factory=RealDictCursor )
         cursor = conn.cursor()
         print("Database connection was succesfull")
@@ -58,15 +59,17 @@ async def about_me():
 
 @app.get("/posts")
 async def get_posts():
-    return {"data": my_posts}
+    cursor.execute(""" SELECT * FROM posts """)
+    posts = cursor.fetchall()
+    return {"data": posts}
 
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
 async def create_posts(new_post:Post):
-    post_dict = new_post.dict()
-    post_dict["id"] = randrange(0, 100000)
-    my_posts.append(post_dict)
-    return {"data": new_post}
+    cursor.execute(""" INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING * """, (new_post.title, new_post.content, new_post.published))
+    post = cursor.fetchone()
+    conn.commit()
+    return {"data": "created post!", "new_post": post}
 
 @app.put("/post/{id}")
 async def update_post(id:int, post:Post):
@@ -79,17 +82,20 @@ async def update_post(id:int, post:Post):
     return {"updated_post": post_dict}
 
 
-@app.get("/post/{id}")
+@app.get("/posts/{id}")
 async def get_post(id:int, response: Response):
-    post = find_post(id)
+    cursor.execute(""" SELECT * FROM posts WHERE id = %s""", (str(id)))
+    post = cursor.fetchone()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with {id} was not found!")
     return {"Detail post: ": post}
 
-@app.delete("/post/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_post(id: int):
-    index = find_index_post(id)
-    if index == None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with {id} does not exist!")
-    my_posts.pop(index)
+    cursor.execute(""" DELETE FROM posts WHERE id = %s  RETURNING * """, (str(id),))
+    delete_post = cursor.fetchone()
+    if not delete_post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Not found post with {id}")
+    conn.commit()
+    
     return Response(status_code=status.HTTP_204_NO_CONTENT) 
