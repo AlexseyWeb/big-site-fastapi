@@ -32,7 +32,6 @@ while True:
         time.sleep(2)
 
 
-my_posts = [{"title": "Zero post", "content": "This is Zero Post", "id" : 0},{"title": "First post ", "content": "This is a first post on site", "id": 1}, {"title": "Second post", "content": "A second post on site", "id": 2}]
 info_api = InfoAboutAPI(version=0.1, description="Default API without details", authors="Gusakov Alexsey Alexseevich")
 
 
@@ -71,15 +70,16 @@ async def create_posts(new_post:Post):
     conn.commit()
     return {"data": "created post!", "new_post": post}
 
-@app.put("/post/{id}")
+@app.put("/posts/{id}")
 async def update_post(id:int, post:Post):
-    index = find_index_post(id)
-    if index == None:
+    cursor.execute(""" UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s  RETURNING * """, (post.title, post.content, post.published, str(id),))
+    updated_post = cursor.fetchone()
+    
+    if updated_post == None:
         raise HTTPException(status_code=status.HTTP_304_NOT_MODIFIED, detail=f"Post with{id} is not update")
-    post_dict = post.dict()
-    post_dict["id"] = id 
-    my_posts[index] = post_dict
-    return {"updated_post": post_dict}
+   
+    conn.commit()
+    return {"data": updated_post}
 
 
 @app.get("/posts/{id}")
