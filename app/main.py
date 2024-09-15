@@ -81,7 +81,7 @@ async def get_posts(db: Session = Depends(get_db)):
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
 async def create_posts(post:Post, db: Session = Depends(get_db)):
 
-    new_post = models.Post(title=post.title, content = post.content, published=post.published)
+    new_post = models.Post(**post.dict())
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
@@ -89,31 +89,43 @@ async def create_posts(post:Post, db: Session = Depends(get_db)):
     return {"data": "created post!", "new_post": new_post}
 
 @app.put("/posts/{id}")
-async def update_post(id:int, post:Post):
-    cursor.execute(""" UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s  RETURNING * """, (post.title, post.content, post.published, str(id),))
-    updated_post = cursor.fetchone()
+async def update_post(id:int, post:Post, db: Session=Depends(get_db)):
+    # cursor.execute(""" UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s  RETURNING * """, (post.title, post.content, post.published, str(id),))
+    # updated_post = cursor.fetchone()
     
-    if updated_post == None:
+    post_query = db.query(models.Post).filter(models.Post.id == id)
+    new_post = post_query.first()
+
+    if new_post == None:
         raise HTTPException(status_code=status.HTTP_304_NOT_MODIFIED, detail=f"Post with{id} is not update")
    
-    conn.commit()
-    return {"data": updated_post}
+    # conn.commit()
+    post_query.update(post.dict(), synchronize_session=False)
+    db.commit()
+
+    return {"data": post_query.first()}
 
 
 @app.get("/posts/{id}")
-async def get_post(id:int, response: Response):
-    cursor.execute(""" SELECT * FROM posts WHERE id = %s""", (str(id)))
-    post = cursor.fetchone()
+async def get_post(id:int, db: Session= Depends(get_db)):
+    # cursor.execute(""" SELECT * FROM posts WHERE id = %s""", (str(id)))
+    # post = cursor.fetchone()
+    post = db.query(models.Post).filter(models.Post.id == id).first()
+
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with {id} was not found!")
     return {"Detail post: ": post}
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_post(id: int):
-    cursor.execute(""" DELETE FROM posts WHERE id = %s  RETURNING * """, (str(id),))
-    delete_post = cursor.fetchone()
-    if not delete_post:
+async def delete_post(id: int, db: Session = Depends(get_db)):
+    # cursor.execute(""" DELETE FROM posts WHERE id = %s  RETURNING * """, (str(id),))
+    # delete_post = cursor.fetchone()
+    post = db.query(models.Post).filter(models.Post.id == id)
+
+    if  post.first() == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Not found post with {id}")
-    conn.commit()
+    # conn.commit()
+    post.delete(synchronize_session=False)
+    db.commit()
     
     return Response(status_code=status.HTTP_204_NO_CONTENT) 
