@@ -24,3 +24,8 @@ class InfoAboutAPI(BaseModel):
     version: float
     description: str 
     authors: str
+
+class User(BaseModel):
+    username: str 
+    password: str 
+    
