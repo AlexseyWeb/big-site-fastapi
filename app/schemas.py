@@ -27,5 +27,6 @@ class InfoAboutAPI(BaseModel):
 
 class User(BaseModel):
     username: str 
-    password: str 
+    password: str
+    code: str  
     
