@@ -28,5 +28,12 @@ class InfoAboutAPI(BaseModel):
 class User(BaseModel):
     username: str 
     password: str
-    code: str  
+    code: str 
+
+class Employee(BaseModel):
+    firstName = str
+    lastName = str 
+    years = int 
+    job_position = str 
+    
     
