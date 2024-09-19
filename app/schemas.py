@@ -13,8 +13,8 @@ class Post(BaseModel):
     id: int 
     title: str 
     content: str 
-    published: bool
-    created_at: datetime
+    # published: bool
+    # created_at: datetime
 
     class Config:
         orm_mode = True 
@@ -30,10 +30,6 @@ class User(BaseModel):
     password: str
     code: str 
 
-class Employee(BaseModel):
-    firstName = str
-    lastName = str 
-    years = int 
-    job_position = str 
+
     
     
