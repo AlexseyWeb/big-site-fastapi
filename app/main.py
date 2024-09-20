@@ -42,8 +42,6 @@ async def about_me():
 
 @app.get("/posts")
 async def get_posts(db: Session = Depends(get_db)):
-    # cursor.execute(""" SELECT * FROM posts """)
-    # posts = cursor.fetchall()
     posts = db.query(models.Post).all()
     return posts
 
@@ -60,16 +58,13 @@ async def create_posts(post:schemas.PostCreate, db: Session = Depends(get_db)):
 
 @app.put("/posts/{id}")
 async def update_post(id:int, post:schemas.PostBase, db: Session=Depends(get_db)):
-    # cursor.execute(""" UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s  RETURNING * """, (post.title, post.content, post.published, str(id),))
-    # updated_post = cursor.fetchone()
-    
+
     post_query = db.query(models.Post).filter(models.Post.id == id)
     new_post = post_query.first()
 
     if new_post == None:
         raise HTTPException(status_code=status.HTTP_304_NOT_MODIFIED, detail=f"Post with{id} is not update")
    
-    # conn.commit()
     post_query.update(post.dict(), synchronize_session=False)
     db.commit()
 
@@ -78,8 +73,7 @@ async def update_post(id:int, post:schemas.PostBase, db: Session=Depends(get_db)
 
 @app.get("/posts/{id}")
 async def get_post(id:int, db: Session= Depends(get_db)):
-    # cursor.execute(""" SELECT * FROM posts WHERE id = %s""", (str(id)))
-    # post = cursor.fetchone()
+    
     post = db.query(models.Post).filter(models.Post.id == id).first()
 
     if not post:
@@ -88,13 +82,11 @@ async def get_post(id:int, db: Session= Depends(get_db)):
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_post(id: int, db: Session = Depends(get_db)):
-    # cursor.execute(""" DELETE FROM posts WHERE id = %s  RETURNING * """, (str(id),))
-    # delete_post = cursor.fetchone()
+
     post = db.query(models.Post).filter(models.Post.id == id)
 
     if  post.first() == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Not found post with {id}")
-    # conn.commit()
     post.delete(synchronize_session=False)
     db.commit()
     
