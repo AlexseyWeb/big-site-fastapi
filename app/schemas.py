@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
 class PostBase(BaseModel):
@@ -25,10 +25,15 @@ class InfoAboutAPI(BaseModel):
     description: str 
     authors: str
 
-class User(BaseModel):
-    username: str 
-    password: str
-    code: str 
+class UserCreate(BaseModel):
+    email: EmailStr 
+    password: str 
+    
+    class Config:
+        orm_mode = True 
+    
+
+
 
 
     
