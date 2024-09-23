@@ -20,11 +20,6 @@ class Post(BaseModel):
         orm_mode = True 
    
 
-class InfoAboutAPI(BaseModel):
-    version: float
-    description: str 
-    authors: str
-
 class UserCreate(BaseModel):
     email: EmailStr 
     password: str 

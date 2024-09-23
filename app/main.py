@@ -1,17 +1,14 @@
-from typing import Optional
-from fastapi import FastAPI, Response, status, HTTPException, Depends
+from fastapi import FastAPI
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
-from sqlalchemy.orm import Session
-from . import models, schemas, utils
-from .database import engine, get_db
-
+from . import models, schemas
+from .database import engine
+from .routers import post, user
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-
 
 
 while True:
@@ -25,90 +22,10 @@ while True:
         print("Database connection is wrong! ", err)
         time.sleep(2)
 
-
-info_api = schemas.InfoAboutAPI(version=0.1, description="Default API without details", authors="Gusakov Alexsey Alexseevich")
+app.include_router(post.router)
+app.include_router(user.router)
 
 @app.get("/")
 async def root():
     return {"message": "Welcome to my api!!"}
 
-@app.get("/about_me")
-async def about_me():
-    return {"version_api": info_api.version, "description_api": info_api.description, "authors_api": info_api.authors }
-
-#CRUD functions with SqlAlchemy ORM
-
-@app.get("/posts")
-async def get_posts(db: Session = Depends(get_db)):
-    posts = db.query(models.Post).all()
-    return posts
-
-
-@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.Post)
-async def create_posts(post:schemas.PostCreate, db: Session = Depends(get_db)):
-
-    new_post = models.Post(**post.dict())
-    db.add(new_post)
-    db.commit()
-    db.refresh(new_post)
-    
-    return  new_post
-
-@app.put("/posts/{id}")
-async def update_post(id:int, post:schemas.PostBase, db: Session=Depends(get_db)):
-
-    post_query = db.query(models.Post).filter(models.Post.id == id)
-    new_post = post_query.first()
-
-    if new_post == None:
-        raise HTTPException(status_code=status.HTTP_304_NOT_MODIFIED, detail=f"Post with{id} is not update")
-   
-    post_query.update(post.dict(), synchronize_session=False)
-    db.commit()
-
-    return  post_query.first()
-
-
-@app.get("/posts/{id}")
-async def get_post(id:int, db: Session= Depends(get_db)):
-    
-    post = db.query(models.Post).filter(models.Post.id == id).first()
-
-    if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with {id} was not found!")
-    return  post
-
-@app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_post(id: int, db: Session = Depends(get_db)):
-
-    post = db.query(models.Post).filter(models.Post.id == id)
-
-    if  post.first() == None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Not found post with {id}")
-    post.delete(synchronize_session=False)
-    db.commit()
-    
-    return Response(status_code=status.HTTP_204_NO_CONTENT) 
-
-
-@app.post("/users", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
-async def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-   
-    hashed_password = utils.hash(user.password)
-    user.password = hashed_password
-
-    new_user = models.User(**user.dict())
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-
-    return new_user
-
-@app.get("/users/{id}")
-async def get_user(id: int, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.id == id).first()
-    
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User with {id} does not exists!")
-
-    return user 
