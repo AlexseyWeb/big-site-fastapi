@@ -26,7 +26,7 @@ async def create_posts(post:schemas.PostCreate, db: Session = Depends(get_db), g
     return  new_post
 
 @router.put("/{id}")
-async def update_post(id:int, post:schemas.PostBase, db: Session=Depends(get_db)):
+async def update_post(id:int, post:schemas.PostBase, db: Session=Depends(get_db), get_current_user: int = Depends(get_current_user)):
 
     post_query = db.query(models.Post).filter(models.Post.id == id)
     new_post = post_query.first()
@@ -41,7 +41,7 @@ async def update_post(id:int, post:schemas.PostBase, db: Session=Depends(get_db)
 
 
 @router.get("/{id}")
-async def get_post(id:int, db: Session= Depends(get_db)):
+async def get_post(id:int, db: Session= Depends(get_db), get_current_user: int = Depends(get_current_user)):
     
     post = db.query(models.Post).filter(models.Post.id == id).first()
 
@@ -50,7 +50,7 @@ async def get_post(id:int, db: Session= Depends(get_db)):
     return  post
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_post(id: int, db: Session = Depends(get_db)):
+async def delete_post(id: int, db: Session = Depends(get_db), get_current_user: int = Depends(get_current_user)):
 
     post = db.query(models.Post).filter(models.Post.id == id)
 
